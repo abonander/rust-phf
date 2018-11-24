@@ -10,6 +10,7 @@ const DEFAULT_LAMBDA: usize = 5;
 
 const FIXED_SEED: u64 = 1234567890;
 
+#[derive(Debug)]
 pub struct HashState {
     pub key: u64,
     pub disps: Vec<(u32, u32)>,
