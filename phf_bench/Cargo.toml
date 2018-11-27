@@ -7,6 +7,4 @@ edition = "2018"
 [dependencies]
 phf_generator = { path = "../phf_generator" }
 rand = "*"
-
-[build-dependencies]
-xz2 = "*"
+xz2 = "0.1"

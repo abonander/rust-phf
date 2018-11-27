@@ -1,5 +1,5 @@
 [workspace]
-members = ["phf", "phf_builder", "phf_codegen", "phf_codegen/test", "phf_generator", "phf_macros", "phf_shared", "phf_bench"]
+members = ["phf", "phf_builder", "phf_codegen", "phf_codegen/test", "phf_generator", "phf_macros", "phf_shared", "phf_bench", "phf_raw"]
 
 [profile.release]
 debug = true
