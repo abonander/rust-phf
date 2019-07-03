@@ -8,11 +8,11 @@ use rand::rngs::SmallRng;
 
 const DEFAULT_LAMBDA: usize = 5;
 
-const FIXED_SEED: u64 = 1234567890;
+const FIXED_SEED: u64 = 0xAAAAAAAAAAAAAAAA;
 
 #[derive(Debug)]
 pub struct HashState {
-    pub key: u64,
+    pub keys: [u64; 3],
     pub disps: Vec<(u32, u32)>,
     pub map: Vec<usize>,
 }
@@ -40,16 +40,18 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
         f2: u32,
     }
 
-    let key = rng.gen();
+    let key1 = rng.gen();
+    let key2 = rng.gen();
+    let key3 = rng.gen();
+
+    let keys = [key1, key2, key3];
 
     let hashes: Vec<_> = entries.iter()
                                 .map(|entry| {
-                                    let hash = phf_shared::hash(entry, key);
-                                    let (g, f1, f2) = phf_shared::split(hash);
+                                    let [g, f1, f2] = phf_shared::hash(entry, keys);
+
                                     Hashes {
-                                        g: g,
-                                        f1: f1,
-                                        f2: f2,
+                                        g, f1, f2,
                                     }
                                 })
                                 .collect();
@@ -132,11 +134,11 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
 
     let count = track_attempts.iter().count() as u64;
     let sum = track_attempts.iter().sum::<u64>();
-    println!("count: {}, sum: {}, average: {}", count, sum, sum / count);
+    // println!("count: {}, sum: {}, average: {}", count, sum, sum / count);
 
     Some(HashState {
-        key: key,
-        disps: disps,
+        keys,
+        disps,
         map: map.into_iter().map(|i| i.unwrap()).collect(),
     })
 }

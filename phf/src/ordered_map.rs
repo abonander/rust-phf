@@ -20,7 +20,7 @@ use crate::Slice;
 /// any time and should never be accessed directly.
 pub struct OrderedMap<K: 'static, V: 'static> {
     #[doc(hidden)]
-    pub key: u64,
+    pub keys: [u64; 3],
     #[doc(hidden)]
     pub disps: Slice<(u32, u32)>,
     #[doc(hidden)]
@@ -109,7 +109,7 @@ impl<K, V> OrderedMap<K, V> {
               K: Borrow<T>
     {
         if self.disps.len() == 0 { return None; } //Prevent panic on empty map
-        let hash = phf_shared::hash(key, self.key);
+        let hash = phf_shared::hash(key, self.keys);
         let idx_index = phf_shared::get_index(hash, &*self.disps, self.idxs.len());
         let idx = self.idxs[idx_index as usize];
         let entry = &self.entries[idx];

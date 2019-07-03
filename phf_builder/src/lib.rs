@@ -59,7 +59,7 @@ impl<K: Hash + PhfHash + Eq, V> Map<K, V> {
                            .collect();
 
         phf::Map {
-            key: state.key,
+            keys: state.keys,
             disps: phf::Slice::Dynamic(state.disps),
             entries: phf::Slice::Dynamic(entries),
         }
@@ -137,7 +137,7 @@ impl<K: Hash + PhfHash + Eq, V> OrderedMap<K, V> {
         let entries = self.keys.into_iter().zip(self.values).collect();
 
         phf::OrderedMap {
-            key: state.key,
+            keys: state.keys,
             disps: phf::Slice::Dynamic(state.disps),
             idxs: phf::Slice::Dynamic(state.map),
             entries: phf::Slice::Dynamic(entries),

@@ -5,6 +5,7 @@
 extern crate std as core;
 
 extern crate siphasher;
+extern crate fnv;
 
 #[cfg(feature = "unicase")]
 extern crate unicase;
@@ -12,28 +13,26 @@ extern crate unicase;
 use core::fmt;
 use core::hash::{Hasher, Hash};
 use siphasher::sip::SipHasher13;
+use fnv::FnvHasher;
 
 #[inline]
 pub fn displace(f1: u32, f2: u32, d1: u32, d2: u32) -> u32 {
-    d2 + f1 * d1 + f2
-}
-
-#[inline]
-pub fn split(hash: u64) -> (u32, u32, u32) {
-    const BITS: u32 = 21;
-    const MASK: u64 = (1 << BITS) - 1;
-
-    ((hash & MASK) as u32,
-     ((hash >> BITS) & MASK) as u32,
-     ((hash >> (2 * BITS)) & MASK) as u32)
+    d2.wrapping_add(f1.wrapping_mul(d1)).wrapping_add(f2)
 }
 
 /// `key` is from `phf_generator::HashState::key`.
 #[inline]
-pub fn hash<T: ?Sized + PhfHash>(x: &T, key: u64) -> u64 {
-    let mut hasher = SipHasher13::new_with_keys(0, key);
-    x.phf_hash(&mut hasher);
-    hasher.finish()
+pub fn hash<T: ?Sized + PhfHash>(x: &T, keys: [u64; 3]) -> [u32; 3] {
+    let mut hashes = [0; 3];
+
+    for (i, (&key, hash_out)) in keys.iter().zip(&mut hashes).enumerate() {
+        // let mut hasher = FnvHasher::with_key(key);
+        let mut hasher = SipHasher13::new_with_keys(i as u64, key);
+        x.phf_hash(&mut hasher);
+        *hash_out = (hasher.finish() >> 32) as u32;
+    }
+
+    hashes
 }
 
 /// Return an index into `phf_generator::HashState::map`.
@@ -42,8 +41,8 @@ pub fn hash<T: ?Sized + PhfHash>(x: &T, key: u64) -> u64 {
 /// * `disps` is from `phf_generator::HashState::disps`.
 /// * `len` is the length of `phf_generator::HashState::map`.
 #[inline]
-pub fn get_index(hash: u64, disps: &[(u32, u32)], len: usize) -> u32 {
-    let (g, f1, f2) = split(hash);
+pub fn get_index(hash: [u32; 3], disps: &[(u32, u32)], len: usize) -> u32 {
+    let [g, f1, f2] = hash;
     let (d1, d2) = disps[(g % (disps.len() as u32)) as usize];
     displace(f1, f2, d1, d2) % (len as u32)
 }

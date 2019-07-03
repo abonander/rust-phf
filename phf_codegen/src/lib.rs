@@ -155,28 +155,28 @@ impl<K: Hash+PhfHash+Eq+FmtConst> Map<K> {
 
         let state = phf_generator::generate_hash(&self.keys);
 
-        try!(write!(w,
-                    "{}::Map {{
-    key: {},
+        write!(w,
+               "{}::Map {{
+    keys: {:?},
     disps: {}::Slice::Static(&[",
-                    self.path, state.key, self.path));
+               self.path, state.keys, self.path)?;
         for &(d1, d2) in &state.disps {
-            try!(write!(w,
-                        "
+            write!(w,
+                   "
         ({}, {}),",
-                        d1,
-                        d2));
+                   d1,
+                   d2)?;
         }
-        try!(write!(w,
-                    "
+        write!(w,
+               "
     ]),
-    entries: {}::Slice::Static(&[", self.path));
+    entries: {}::Slice::Static(&[", self.path)?;
         for &idx in &state.map {
-            try!(write!(w,
-                        "
+            write!(w,
+                   "
         ({}, {}),",
-                        Delegate(&self.keys[idx]),
-                        &self.values[idx]));
+                   Delegate(&self.keys[idx]),
+                   &self.values[idx])?;
         }
         write!(w,
                "
@@ -272,9 +272,9 @@ impl<K: Hash+PhfHash+Eq+FmtConst> OrderedMap<K> {
 
         try!(write!(w,
                     "{}::OrderedMap {{
-    key: {},
+    keys: {:?},
     disps: {}::Slice::Static(&[",
-                    self.path, state.key, self.path));
+                    self.path, state.keys, self.path));
         for &(d1, d2) in &state.disps {
             try!(write!(w,
                         "

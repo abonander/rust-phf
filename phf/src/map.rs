@@ -16,7 +16,7 @@ use crate::Slice;
 /// time and should never be accessed directly.
 pub struct Map<K: 'static, V: 'static> {
     #[doc(hidden)]
-    pub key: u64,
+    pub keys: [u64; 3],
     #[doc(hidden)]
     pub disps: Slice<(u32, u32)>,
     #[doc(hidden)]
@@ -81,7 +81,7 @@ impl<K, V> Map<K, V> {
               K: Borrow<T>
     {
         if self.disps.len() == 0 { return None; } //Prevent panic on empty map
-        let hash = phf_shared::hash(key, self.key);
+        let hash = phf_shared::hash(key, self.keys);
         let index = phf_shared::get_index(hash, &*self.disps, self.entries.len());
         let entry = &self.entries[index as usize];
         let b: &T = entry.0.borrow();

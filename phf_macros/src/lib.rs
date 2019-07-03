@@ -10,6 +10,8 @@ use syn::parse::{self, Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::{parse_macro_input, Error, Expr, IntSuffix, Lit, Token, UnOp};
 
+use std::panic;
+
 #[derive(Hash, PartialEq, Eq, Clone)]
 enum ParsedKey {
     Str(String),
@@ -188,7 +190,8 @@ fn check_duplicates(entries: &[Entry]) -> parse::Result<()> {
 }
 
 fn build_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
-    let key = state.key;
+    let [g, f1, f2] = state.keys;
+    let key_tokens = quote!([#g, #f1, #f2]);
     let disps = state.disps.iter().map(|&(d1, d2)| quote!((#d1, #d2)));
     let entries = state.map.iter().map(|&idx| {
         let key = &entries[idx].key.expr;
@@ -198,7 +201,7 @@ fn build_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
 
     quote! {
         phf::Map {
-            key: #key,
+            keys: #key_tokens,
             disps: phf::Slice::Static(&[#(#disps),*]),
             entries: phf::Slice::Static(&[#(#entries),*]),
         }
@@ -206,7 +209,8 @@ fn build_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
 }
 
 fn build_ordered_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenStream {
-    let key = state.key;
+    let [g, f1, f2] = state.keys;
+    let key_tokens = quote!([#g, #f1, #f2]);
     let disps = state.disps.iter().map(|&(d1, d2)| quote!((#d1, #d2)));
     let idxs = state.map.iter().map(|idx| quote!(#idx));
     let entries = entries.iter().map(|entry| {
@@ -217,7 +221,7 @@ fn build_ordered_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenS
 
     quote! {
         phf::OrderedMap {
-            key: #key,
+            keys: #key_tokens,
             disps: phf::Slice::Static(&[#(#disps),*]),
             idxs: phf::Slice::Static(&[#(#idxs),*]),
             entries: phf::Slice::Static(&[#(#entries),*]),
@@ -227,7 +231,10 @@ fn build_ordered_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenS
 
 #[proc_macro]
 pub fn phf_map(input: TokenStream) -> TokenStream {
+    panic::set_hook(Box::new(|pi| eprintln!("panic occurred: {}", pi)));
+
     let map = parse_macro_input!(input as Map);
+
     let state = phf_generator::generate_hash(&map.0);
 
     build_map(&map.0, state).into()
