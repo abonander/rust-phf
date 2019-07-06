@@ -16,20 +16,20 @@ use siphasher::sip::SipHasher13;
 use fnv::FnvHasher;
 
 #[inline]
-pub fn displace(f1: u32, f2: u32, d1: u32, d2: u32) -> u32 {
+pub fn displace(f1: u64, f2: u64, d1: u64, d2: u64) -> u64 {
     d2.wrapping_add(f1.wrapping_mul(d1)).wrapping_add(f2)
 }
 
 /// `key` is from `phf_generator::HashState::key`.
 #[inline]
-pub fn hash<T: ?Sized + PhfHash>(x: &T, keys: [u64; 3]) -> [u32; 3] {
+pub fn hash<T: ?Sized + PhfHash>(x: &T, keys: [u64; 3]) -> [u64; 3] {
     let mut hashes = [0; 3];
 
     for (i, (&key, hash_out)) in keys.iter().zip(&mut hashes).enumerate() {
         // let mut hasher = FnvHasher::with_key(key);
         let mut hasher = SipHasher13::new_with_keys(i as u64, key);
         x.phf_hash(&mut hasher);
-        *hash_out = (hasher.finish() >> 32) as u32;
+        *hash_out = hasher.finish();
     }
 
     hashes
@@ -41,10 +41,10 @@ pub fn hash<T: ?Sized + PhfHash>(x: &T, keys: [u64; 3]) -> [u32; 3] {
 /// * `disps` is from `phf_generator::HashState::disps`.
 /// * `len` is the length of `phf_generator::HashState::map`.
 #[inline]
-pub fn get_index(hash: [u32; 3], disps: &[(u32, u32)], len: usize) -> u32 {
+pub fn get_index(hash: [u64; 3], disps: &[(u64, u64)], len: usize) -> u64 {
     let [g, f1, f2] = hash;
-    let (d1, d2) = disps[(g % (disps.len() as u32)) as usize];
-    displace(f1, f2, d1, d2) % (len as u32)
+    let (d1, d2) = disps[(g % (disps.len() as u64)) as usize];
+    displace(f1, f2, d1, d2) % (len as u64)
 }
 
 /// A trait implemented by types which can be used in PHF data structures.

@@ -1,12 +1,14 @@
+use bytesize::ByteSize;
+
 use std::time::Instant;
 use std::io::prelude::*;
-use std::fs::File;
+use std::io;
 
 fn main() {
-    let pws = phf_bench::get_pws(500_000);
+    let pws = phf_bench::get_pws(1_000_000);
     let start = Instant::now();
     let pws_hash = phf_generator::generate_hash(&pws);
     println!("Duration: {:?}", Instant::now() - start);
-    let mut dummy = File::create("/dev/null").expect("opening /dev/null");
-    write!(dummy, "{:?}", pws_hash).expect("writing to /dev/null");
+    let output = format!("{:?}", pws_hash);
+    println!("Encoded Size: ~{}", ByteSize::b(output.len() as u64));
 }

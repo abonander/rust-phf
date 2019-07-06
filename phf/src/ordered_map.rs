@@ -22,7 +22,7 @@ pub struct OrderedMap<K: 'static, V: 'static> {
     #[doc(hidden)]
     pub keys: [u64; 3],
     #[doc(hidden)]
-    pub disps: Slice<(u32, u32)>,
+    pub disps: Slice<(u64, u64)>,
     #[doc(hidden)]
     pub idxs: Slice<usize>,
     #[doc(hidden)]

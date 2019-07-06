@@ -13,7 +13,7 @@ const FIXED_SEED: u64 = 0xAAAAAAAAAAAAAAAA;
 #[derive(Debug)]
 pub struct HashState {
     pub keys: [u64; 3],
-    pub disps: Vec<(u32, u32)>,
+    pub disps: Vec<(u64, u64)>,
     pub map: Vec<usize>,
 }
 
@@ -35,9 +35,9 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
     }
 
     struct Hashes {
-        g: u32,
-        f1: u32,
-        f2: u32,
+        g: u64,
+        f1: u64,
+        f2: u64,
     }
 
     let key1 = rng.gen();
@@ -69,7 +69,7 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
 
     // Sort into buckets by value of hash
     for (i, hash) in hashes.iter().enumerate() {
-        buckets[(hash.g % (buckets_len as u32)) as usize].keys.push(i);
+        buckets[(hash.g % (buckets_len as u64)) as usize].keys.push(i);
     }
 
     // Sort descending
@@ -77,7 +77,7 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
 
     let table_len = entries.len();
     let mut map = vec![None; table_len];
-    let mut disps = vec![(0u32, 0u32); buckets_len];
+    let mut disps = vec![(0u64, 0u64); buckets_len];
 
     // store whether an element from the bucket being placed is
     // located at a certain position, to allow for efficient overlap
@@ -100,14 +100,14 @@ fn try_generate_hash<H: PhfHash>(entries: &[H], rng: &mut SmallRng) -> Option<Ha
 
     'buckets: for bucket in &buckets {
         let mut attempts = 0u64;
-        for d1 in 0..(table_len as u32) {
-            'disps: for d2 in 0..(table_len as u32) {
+        for d1 in 0..(table_len as u64) {
+            'disps: for d2 in 0..(table_len as u64) {
                 values_to_add.clear();
                 generation += 1;
 
                 for &key in &bucket.keys {
                     let idx = (phf_shared::displace(hashes[key].f1, hashes[key].f2, d1, d2) %
-                               (table_len as u32)) as usize;
+                               (table_len as u64)) as usize;
                     if map[idx].is_some() || try_map[idx] == generation {
                         attempts += 1;
                         continue 'disps;

@@ -5,6 +5,7 @@ authors = ["Richard Dodd <richard.o.dodd@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bytesize = "1.0"
 phf_generator = { path = "../phf_generator" }
 rand = "*"
 xz2 = "0.1"
